@@ -1,0 +1,16 @@
+2025-11-27 17:51:03,128 - INFO - Placing MARKET BUY 0.001 BTCUSDT
+2025-11-27 17:51:03,603 - ERROR - Binance API error: APIError(code=-2015): Invalid API-key, IP, or permissions for action
+2025-11-27 18:11:03,982 - INFO - Placing SPOT MARKET BUY 0.001 BTCUSDT
+2025-11-27 18:11:04,223 - ERROR - Binance API error: APIError(code=-1021): Timestamp for this request was 1000ms ahead of the server's time.
+2025-11-27 18:16:37,567 - INFO - Placing SPOT MARKET BUY 0.001 BTCUSDT
+2025-11-27 18:16:37,762 - ERROR - Binance API error: APIError(code=-2010): Account has insufficient balance for requested action.
+2025-11-27 18:20:14,756 - INFO - Placing SPOT LIMIT BUY 0.001 BTCUSDT @ 50000.0
+2025-11-27 18:20:14,939 - ERROR - Binance API error (limit): APIError(code=-2010): Account has insufficient balance for requested action.
+2025-11-27 18:25:38,877 - INFO - TWAP chunk 1/5: SPOT MARKET BUY 0.002 BTCUSDT
+2025-11-27 18:25:39,060 - ERROR - Binance API error (TWAP, chunk 1): APIError(code=-2010): Account has insufficient balance for requested action.
+2025-11-27 18:29:24,792 - INFO - Placing SPOT MARKET BUY 0.001 BTCUSDT
+2025-11-27 18:29:25,122 - ERROR - Binance API error (market): APIError(code=-2010): Account has insufficient balance for requested action.
+2025-11-27 18:30:45,045 - INFO - Placing SPOT LIMIT BUY 0.001 BTCUSDT @ 50000.0
+2025-11-27 18:30:45,287 - ERROR - Binance API error (limit): APIError(code=-2010): Account has insufficient balance for requested action.
+2025-11-27 18:30:57,814 - INFO - TWAP chunk 1/5: SPOT MARKET BUY 0.002 BTCUSDT
+2025-11-27 18:30:58,076 - ERROR - Binance API error (TWAP, chunk 1): APIError(code=-2010): Account has insufficient balance for requested action.
