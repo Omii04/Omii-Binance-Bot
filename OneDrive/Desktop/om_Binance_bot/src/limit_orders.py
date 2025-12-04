@@ -3,7 +3,7 @@ import argparse
 from binance.enums import SIDE_BUY, SIDE_SELL, ORDER_TYPE_LIMIT, TIME_IN_FORCE_GTC
 from binance.exceptions import BinanceAPIException
 
-from utils import validate_inputs, get_client, logger
+from helpers import validate_inputs, get_client, logger
 
 
 def place_limit_order(symbol: str, side: str, quantity, price):

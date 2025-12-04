@@ -6,6 +6,7 @@ from binance.exceptions import BinanceAPIException
 from utils import validate_inputs, get_client, logger
 
 
+
 def place_market_order(symbol: str, side: str, quantity):
     client = get_client()
 
@@ -44,12 +45,27 @@ def place_market_order(symbol: str, side: str, quantity):
 
 def main():
     parser = argparse.ArgumentParser(description="Binance SPOT Market Order CLI Bot")
-    parser.add_argument("symbol", help="Trading pair, e.g., BTCUSDT")
-    parser.add_argument("side", help="BUY or SELL")
-    parser.add_argument("quantity", help="Order quantity, e.g., 0.001")
+    # Positional (kept for backwards compatibility) — make them optional
+    parser.add_argument("symbol", nargs="?", help="Trading pair, e.g., BTCUSDT")
+    parser.add_argument("side", nargs="?", help="BUY or SELL")
+    parser.add_argument("quantity", nargs="?", help="Order quantity, e.g., 0.001")
+
+    # Optional flags (preferred by some users)
+    parser.add_argument("-s", "--symbol", dest="symbol_flag", help="Trading pair, e.g., BTCUSDT")
+    parser.add_argument("-S", "--side", dest="side_flag", help="BUY or SELL")
+    parser.add_argument("-q", "--quantity", dest="quantity_flag", help="Order quantity, e.g., 0.001")
 
     args = parser.parse_args()
-    place_market_order(args.symbol, args.side, args.quantity)
+
+    # Prefer flags if provided, otherwise fall back to positional args
+    symbol = args.symbol_flag or args.symbol
+    side = args.side_flag or args.side
+    quantity = args.quantity_flag or args.quantity
+
+    if not (symbol and side and quantity):
+        parser.error("Symbol, side and quantity are required (provide as positional args or with -s/-S/-q flags).")
+
+    place_market_order(symbol, side, quantity)
 
 
 if __name__ == "__main__":
