@@ -49,8 +49,12 @@ def validate_inputs(symbol: str, quantity, price: Optional[float] = None):
     return symbol.upper(), quantity, price
 
 
-# ---------- Binance Client (SPOT) ----------
-def get_client() -> Client:
+# ---------- Binance Futures Client (USDT-M) ----------
+def get_client():
+    """
+    Get a Binance Futures (USDT-M) client.
+    Uses the python-binance Client which supports both SPOT and Futures.
+    """
     api_key = os.getenv("API_KEY")
     api_secret = os.getenv("API_SECRET")
 
@@ -61,11 +65,13 @@ def get_client() -> Client:
 
     # Sync timestamp with Binance server to avoid -1021 errors
     try:
-        server_time = client.get_server_time()
-        server_ts = server_time["serverTime"]        # ms
-        local_ts = int(time.time() * 1000)           # ms
+        # Futures API endpoint for server time
+        server_time = client.futures_time()
+        server_ts = server_time.get("serverTime", int(time.time() * 1000))  # ms
+        local_ts = int(time.time() * 1000)  # ms
         client._timestamp_offset = server_ts - local_ts
     except Exception as e:
         logger.warning(f"Failed to sync server time: {e}")
 
     return client
+

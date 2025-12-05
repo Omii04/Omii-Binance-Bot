@@ -20,3 +20,9 @@
 2025-12-04 22:12:31,116 - ERROR - Binance API error (market): APIError(code=-2010): Account has insufficient balance for requested action.
 2025-12-04 22:14:59,344 - INFO - Placing SPOT MARKET BUY 0.001 BTCUSDT
 2025-12-04 22:14:59,754 - ERROR - Binance API error (market): APIError(code=-2010): Account has insufficient balance for requested action.
+2025-12-05 08:16:36,857 - INFO - [DRY-RUN] Would place Futures MARKET BUY 0.001 BTCUSDT
+2025-12-05 08:16:45,886 - INFO - [DRY-RUN] Would place Futures LIMIT BUY 0.001 BTCUSDT @ 50000.0
+2025-12-05 08:17:22,332 - INFO - [DRY-RUN] Would place Stop-Limit SELL 0.001 BTCUSDT: Stop=$60000.00, Limit=$59900.00
+2025-12-05 08:17:24,453 - INFO - [DRY-RUN] Would place OCO BUY 0.001 BTCUSDT: TP=51000.0, SL=49000.0
+2025-12-05 08:17:31,837 - INFO - [DRY-RUN] TWAP: 0.01 BTCUSDT in 5 parts, ~0.00200000 per order, every 10.0s
+2025-12-05 08:17:34,320 - INFO - [DRY-RUN] Would place 5-level grid BUY strategy for BTCUSDT: $49000.00 - $51000.00

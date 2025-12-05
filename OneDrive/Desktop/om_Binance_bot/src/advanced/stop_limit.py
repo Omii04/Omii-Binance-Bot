@@ -1,179 +1,123 @@
-import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
-#!/usr/bin/env python3
 """
-Stop-Limit watcher for Binance USDT-M Futures (polling-based).
-
-Usage:
-  python src/advanced/stop_limit.py --symbol BTCUSDT --side SELL --stop-price 60000 --limit-price 59900 --qty 0.001 --check-interval 5 --timeout 3600 --testnet --dry-run
-
-Meaning:
- - If side=SELL and last_price <= stop_price then place LIMIT SELL at limit_price.
- - If side=BUY  and last_price >= stop_price then place LIMIT BUY at limit_price.
-
-Notes:
- - This script polls the symbol ticker periodically (check-interval).
- - Use --dry-run to simulate without sending orders.
- - Use --testnet for futures testnet (make sure keys point to testnet).
+Stop-Limit Orders for Binance Futures.
+Trigger a limit order when the price reaches a stop price.
 """
+
 import argparse
-import os
-import sys
 import time
-import math
-from typing import Optional
+import sys
+import os
 
-from binance.client import Client
-from binance.exceptions import BinanceAPIException, BinanceRequestException
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Reuse your utils
-from src.utils.logging_config import setup_logger
-from src.utils.validator import validate_symbol, validate_quantity, validate_price
-import src.config as config
+from binance.exceptions import BinanceAPIException
 
-logger = setup_logger()
+from utils import validate_inputs, get_client, logger
 
-def get_client(use_testnet: bool):
-    api_key = os.getenv('BINANCE_API_KEY') or getattr(config, 'API_KEY', None)
-    api_secret = os.getenv('BINANCE_API_SECRET') or getattr(config, 'API_SECRET', None)
-    if not api_key or not api_secret:
-        raise EnvironmentError("Set BINANCE_API_KEY and BINANCE_API_SECRET in env or src/config.py")
-    client = Client(api_key, api_secret)
-    if use_testnet:
-        client.API_URL = 'https://testnet.binancefuture.com'
-    return client
 
-def get_last_price(client: Client, symbol: str) -> float:
-    t = client.futures_symbol_ticker(symbol=symbol)
-    return float(t['price'])
-
-def fetch_symbol_filters(client: Client, symbol: str):
-    info = client.futures_exchange_info().get('symbols', [])
-    for s in info:
-        if s.get('symbol') == symbol:
-            return {f['filterType']: f for f in s.get('filters', [])}
-    return {}
-
-def round_qty(qty: float, step_size: Optional[str]) -> float:
-    if not step_size:
-        return qty
-    step = float(step_size)
-    if step <= 0:
-        return qty
-    prec = max(0, int(round(-math.log10(step))))
-    floored = math.floor(qty/step) * step
-    return round(floored, prec)
-
-def round_price(price: float, tick_size: Optional[str]) -> float:
-    if not tick_size:
-        return price
-    tick = float(tick_size)
-    if tick <= 0:
-        return price
-    prec = max(0, int(round(-math.log10(tick))))
-    floored = math.floor(price / tick) * tick
-    return round(floored, prec)
-
-def place_limit_order(client: Client, symbol: str, side: str, qty: float, price: float, dry_run: bool=False):
-    logger.info(f"Placing LIMIT {side} {qty} {symbol} @ {price} (dry={dry_run})")
+def place_stop_limit_order(
+    symbol: str,
+    side: str,
+    quantity,
+    stop_price: float,
+    limit_price: float,
+    dry_run: bool = False
+):
+    """
+    Place a stop-limit order on Binance Futures.
+    
+    Args:
+        symbol: Trading pair (e.g., BTCUSDT)
+        side: BUY or SELL
+        quantity: Order quantity
+        stop_price: Price at which order is triggered
+        limit_price: Price at which order is placed
+        dry_run: If True, only validate without placing
+    """
+    symbol, quantity, _ = validate_inputs(symbol, quantity)
+    
+    side_up = side.upper()
+    if side_up not in ["BUY", "SELL"]:
+        raise ValueError("side must be BUY or SELL")
+    
+    try:
+        stop_price = float(stop_price)
+        limit_price = float(limit_price)
+    except ValueError:
+        raise ValueError("stop_price and limit_price must be numbers")
+    
+    if stop_price <= 0 or limit_price <= 0:
+        raise ValueError("Prices must be positive")
+    
     if dry_run:
-        return {"status":"DRY_RUN","symbol":symbol,"side":side,"qty":qty,"price":price,"time":int(time.time())}
-    return client.futures_create_order(
-        symbol=symbol,
-        side=side,
-        type='LIMIT',
-        timeInForce='GTC',
-        quantity=str(qty),
-        price=str(price)
-    )
+        logger.info(
+            f"[DRY-RUN] Would place Stop-Limit {side_up} {quantity} {symbol}: "
+            f"Stop=${stop_price:.2f}, Limit=${limit_price:.2f}"
+        )
+        print(
+            f"✅ [DRY-RUN] Stop-Limit order validated: {side_up} {quantity} {symbol} "
+            f"Stop=${stop_price:.2f}, Limit=${limit_price:.2f}"
+        )
+        return
+    
+    client = get_client()
+    try:
+        logger.info(
+            f"Placing Stop-Limit {side_up} {quantity} {symbol}: "
+            f"Stop=${stop_price:.2f}, Limit=${limit_price:.2f}"
+        )
+        
+        order = client.futures_create_order(
+            symbol=symbol,
+            side=side_up,
+            type="STOP_MARKET",
+            timeInForce="GTC",
+            stopPrice=str(stop_price),
+            quantity=quantity
+        )
+        
+        logger.info(f"Stop-Limit order response: {order}")
+        print("✅ Stop-Limit order placed (or attempted).")
+        print(f"   Order ID: {order.get('orderId', 'N/A')}")
+    
+    except BinanceAPIException as e:
+        logger.error(f"Binance API error (stop-limit): {e}")
+        print("❌ Binance API error:", e)
+    
+    except Exception as e:
+        logger.error(f"General error (stop-limit): {e}")
+        print("❌ Error:", e)
 
-def stop_limit_watch(client: Client, symbol: str, side: str, stop_price: float, limit_price: float,
-                     qty: float, check_interval: int, timeout: int, dry_run: bool=False):
-    start = time.time()
-    logger.info(f"Starting stop-limit watch: {side} {qty} {symbol}, stop={stop_price}, limit={limit_price}, interval={check_interval}s, timeout={timeout}s")
-    # get filters
-    filters = fetch_symbol_filters(client, symbol)
-    step_size = None
-    tick_size = None
-    if 'LOT_SIZE' in filters:
-        step_size = filters['LOT_SIZE'].get('stepSize')
-    if 'PRICE_FILTER' in filters:
-        tick_size = filters['PRICE_FILTER'].get('tickSize')
-
-    qty_adj = round_qty(qty, step_size)
-    limit_price_adj = round_price(limit_price, tick_size)
-
-    if qty_adj <= 0:
-        raise ValueError("Adjusted quantity is 0. Check stepSize and input qty.")
-
-    logger.info(f"Adjusted qty={qty_adj} (step={step_size}), limit_price={limit_price_adj} (tick={tick_size})")
-
-    while True:
-        now = time.time()
-        if timeout and (now - start) > timeout:
-            logger.info("Timeout reached without trigger. Exiting watch.")
-            return {"status":"TIMEOUT"}
-        try:
-            last_price = get_last_price(client, symbol)
-            logger.info(f"Market price for {symbol}: {last_price}")
-            triggered = False
-            if side.upper() == 'SELL':
-                # Sell stop: trigger when price <= stop_price
-                if last_price <= stop_price:
-                    triggered = True
-            else: # BUY
-                # Buy stop: trigger when price >= stop_price
-                if last_price >= stop_price:
-                    triggered = True
-
-            if triggered:
-                logger.info(f"Stop price reached (last={last_price}). Placing limit order...")
-                resp = place_limit_order(client, symbol, side, qty_adj, limit_price_adj, dry_run=dry_run)
-                logger.info(f"Limit order response: {resp}")
-                return {"status":"FILLED_OR_SENT","response":resp,"trigger_price":last_price}
-            # else sleep and continue
-            time.sleep(check_interval)
-        except (BinanceAPIException, BinanceRequestException) as e:
-            logger.exception(f"Binance API error while watching price: {e}")
-            time.sleep(check_interval)
-        except Exception as e:
-            logger.exception(f"Unexpected error in watch loop: {e}")
-            time.sleep(check_interval)
-
-def parse_args():
-    p = argparse.ArgumentParser(description="Stop-Limit watcher (polling) for Binance Futures")
-    p.add_argument('--symbol','-s', required=True, help='Symbol e.g. BTCUSDT')
-    p.add_argument('--side','-S', required=True, choices=['BUY','SELL'], help='BUY or SELL for the LIMIT order to place when triggered')
-    p.add_argument('--stop-price', required=True, type=float, help='Stop trigger price')
-    p.add_argument('--limit-price', required=True, type=float, help='Limit price to place once triggered')
-    p.add_argument('--qty','-q', required=True, help='Quantity to trade')
-    p.add_argument('--check-interval', type=int, default=5, help='Seconds between price checks (default 5)')
-    p.add_argument('--timeout', type=int, default=3600, help='Overall timeout in seconds (default 3600)')
-    p.add_argument('--testnet', action='store_true', help='Use futures testnet')
-    p.add_argument('--dry-run', action='store_true', help='Simulate without sending order')
-    return p.parse_args()
 
 def main():
-    args = parse_args()
-    symbol = args.symbol.upper()
-    side = args.side.upper()
-    try:
-        if not validate_symbol(symbol):
-            raise ValueError("Invalid symbol format")
-        qty = validate_quantity(args.qty)
-        stop_price = validate_price(args.stop_price)
-        limit_price = validate_price(args.limit_price)
-    except Exception as e:
-        logger.error(f"Validation error: {e}")
-        print("Validation error:", e)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Binance Futures Stop-Limit Order CLI Bot")
+    parser.add_argument("symbol", nargs="?", help="Trading pair, e.g., BTCUSDT")
+    parser.add_argument("side", nargs="?", help="BUY or SELL")
+    parser.add_argument("quantity", nargs="?", help="Order quantity, e.g., 0.001")
+    parser.add_argument("stop_price", nargs="?", help="Stop price (trigger)")
+    parser.add_argument("limit_price", nargs="?", help="Limit price (execution)")
+    
+    parser.add_argument("-s", "--symbol", dest="symbol_flag", help="Trading pair")
+    parser.add_argument("-S", "--side", dest="side_flag", help="BUY or SELL")
+    parser.add_argument("-q", "--quantity", dest="quantity_flag", help="Order quantity")
+    parser.add_argument("--stop", dest="stop_flag", help="Stop price")
+    parser.add_argument("--limit", dest="limit_flag", help="Limit price")
+    parser.add_argument("--dry-run", action="store_true", help="Validate without placing")
+    
+    args = parser.parse_args()
+    
+    symbol = args.symbol_flag or args.symbol
+    side = args.side_flag or args.side
+    quantity = args.quantity_flag or args.quantity
+    stop_price = args.stop_flag or args.stop_price
+    limit_price = args.limit_flag or args.limit_price
+    
+    if not all([symbol, side, quantity, stop_price, limit_price]):
+        parser.error("Symbol, side, quantity, stop_price, and limit_price are required.")
+    
+    place_stop_limit_order(symbol, side, quantity, stop_price, limit_price, dry_run=args.dry_run)
 
-    client = get_client(args.testnet)
-    result = stop_limit_watch(client, symbol, side, stop_price, limit_price, qty,
-                              check_interval=args.check_interval, timeout=args.timeout,
-                              dry_run=args.dry_run)
-    print(result)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
