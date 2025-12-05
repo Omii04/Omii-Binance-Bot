@@ -1,92 +1,11 @@
 """
-OCO (One-Cancels-the-Other) Orders for Binance Futures.
-Place an entry order, and create take-profit (LIMIT) and stop-loss (STOP_MARKET) exits.
+DEPRECATED - moved to `oco_strategy.py`.
+
+This file is kept for backwards compatibility but is intentionally inert.
+Use `src/advanced/oco_strategy.py` instead.
 """
 
-import argparse
 import sys
-import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from binance.exceptions import BinanceAPIException
-
-from utils import validate_inputs, get_client, logger
-
-
-def place_oco_order(
-    symbol: str,
-    side: str,
-    quantity,
-    tp_price: float,
-    sl_price: float,
-    dry_run: bool = False
-):
-    symbol, quantity, _ = validate_inputs(symbol, quantity)
-
-    side_up = side.upper()
-    if side_up not in ["BUY", "SELL"]:
-        raise ValueError("side must be BUY or SELL")
-
-    opposite_side = "SELL" if side_up == "BUY" else "BUY"
-
-    try:
-        tp_price = float(tp_price)
-        sl_price = float(sl_price)
-    except ValueError:
-        raise ValueError("tp_price and sl_price must be numbers")
-
-    if tp_price <= 0 or sl_price <= 0:
-        raise ValueError("Prices must be positive")
-
-    if dry_run:
-        logger.info(f"[DRY-RUN] Would place OCO {side_up} {quantity} {symbol}: TP={tp_price}, SL={sl_price}")
-        print(f"[DRY-RUN] OCO order validated: {side_up} {quantity} {symbol} with TP={tp_price}, SL={sl_price}")
-        return
-
-    client = get_client()
-    try:
-        logger.info(f"Placing OCO {side_up} {quantity} {symbol}: TP={tp_price}, SL={sl_price}")
-
-        # Entry market order
-        entry_order = client.futures_create_order(
-            symbol=symbol,
-            side=side_up,
-            type="MARKET",
-            quantity=quantity
-        )
-        logger.info(f"Entry order placed: {entry_order}")
-
-        # Take-profit limit (opposite side)
-        tp_order = client.futures_create_order(
-            symbol=symbol,
-            side=opposite_side,
-            type="LIMIT",
-            timeInForce="GTC",
-            quantity=quantity,
-            price=str(tp_price)
-        )
-        logger.info(f"Take-profit order placed: {tp_order}")
-
-        # Stop-loss market (opposite side)
-        sl_order = client.futures_create_order(
-            symbol=symbol,
-            side=opposite_side,
-            type="STOP_MARKET",
-            stopPrice=str(sl_price),
-            quantity=quantity
-        )
-        logger.info(f"Stop-loss order placed: {sl_order}")
-
-        print("[OK] OCO orders placed (entry + TP + SL).")
-        print(f"Entry: {entry_order.get('orderId', 'N/A')}")
-        print(f"Take-Profit: {tp_order.get('orderId', 'N/A')}")
-        print(f"Stop-Loss: {sl_order.get('orderId', 'N/A')}")
-
-    except BinanceAPIException as e:
-        logger.error(f"Binance API error (OCO): {e}")
-        print("[ERROR] Binance API error:", e)
-
-    except Exception as e:
-        logger.error(f"General error (OCO): {e}")
-        print("[ERROR] Error:", e)
+print("DEPRECATED: src/advanced/oco.py has been replaced by src/advanced/oco_strategy.py. Exiting.")
+sys.exit(0)
