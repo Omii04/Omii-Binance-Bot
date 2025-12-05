@@ -117,22 +117,22 @@
         <tr>
             <td><strong>Advanced: Stop-Limit</strong></td>
             <td><span class="success">✓ Complete</span></td>
-            <td><code>src/advanced/stop_limit.py</code> - Trigger limit when stop price hit</td>
+            <td><code>src/advanced/stop_limit_order.py</code> - Trigger limit when stop price hit</td>
         </tr>
         <tr>
             <td><strong>Advanced: OCO</strong></td>
             <td><span class="success">✓ Complete</span></td>
-            <td><code>src/advanced/oco.py</code> - Take-profit + stop-loss simultaneous</td>
+            <td><code>src/advanced/oco_strategy.py</code> - Take-profit + stop-loss simultaneous</td>
         </tr>
         <tr>
             <td><strong>Advanced: TWAP</strong></td>
             <td><span class="success">✓ Complete</span></td>
-            <td><code>src/advanced/twap.py</code> - Split orders over time</td>
+            <td><code>src/advanced/twap_strategy.py</code> - Split orders over time</td>
         </tr>
         <tr>
             <td><strong>Advanced: Grid Orders</strong></td>
             <td><span class="success">✓ Complete</span></td>
-            <td><code>src/advanced/grid.py</code> - Buy-low/sell-high automation</td>
+            <td><code>src/advanced/grid_strategy.py</code> - Buy-low/sell-high automation</td>
         </tr>
         <tr>
             <td><strong>Validation & Input Checks</strong></td>
@@ -168,10 +168,10 @@ om_Binance_bot/
 │   │   └── __init__.py               # Re-exports helpers
 │   └── advanced/
 │       ├── __init__.py
-│       ├── stop_limit.py             # Stop-limit orders
-│       ├── twap.py                   # TWAP strategy
-│       ├── oco.py                    # OCO orders
-│       └── grid.py                   # Grid trading
+│       ├── stop_limit_order.py        # Stop-limit orders
+│       ├── twap_strategy.py           # TWAP strategy
+│       ├── oco_strategy.py            # OCO orders
+│       └── grid_strategy.py           # Grid trading
 ├── .env                              # API credentials (not committed)
 ├── bot.log                           # Execution logs
 ├── README.md                         # User documentation
@@ -204,44 +204,44 @@ python limit_orders.py -s BTCUSDT -S BUY -q 0.001 -p 50000 --dry-run
 
     <h2>Advanced Modules</h2>
 
-    <h3>3. Stop-Limit Orders (<code>src/advanced/stop_limit.py</code>)</h3>
+    <h3>3. Stop-Limit Orders (<code>src/advanced/stop_limit_order.py</code>)</h3>
     <p>Trigger a limit order when price reaches a stop price. Useful for automated entry/exit.</p>
     <div class="code-block">
 # SELL at 59900 when price drops to 60000
-python advanced/stop_limit.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900
+python advanced/stop_limit_order.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900
 
 # Dry-run
-python advanced/stop_limit.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900 --dry-run
+python advanced/stop_limit_order.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900 --dry-run
     </div>
 
-    <h3>4. OCO Orders (<code>src/advanced/oco.py</code>)</h3>
+    <h3>4. OCO Orders (<code>src/advanced/oco_strategy.py</code>)</h3>
     <p>One-Cancels-the-Other: simultaneously place take-profit and stop-loss orders. If one fills, the other auto-cancels.</p>
     <div class="code-block">
 # BUY 0.001 BTC, take profit at 51000, stop loss at 49000
-python advanced/oco.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000
+python advanced/oco_strategy.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000
 
 # Dry-run
-python advanced/oco.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000 --dry-run
+python advanced/oco_strategy.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000 --dry-run
     </div>
 
-    <h3>5. TWAP Strategy (<code>src/advanced/twap.py</code>)</h3>
+    <h3>5. TWAP Strategy (<code>src/advanced/twap_strategy.py</code>)</h3>
     <p>Time-Weighted Average Price: split large orders into smaller chunks over time to minimize market impact.</p>
     <div class="code-block">
 # Buy 0.01 BTC in 5 chunks, 10 seconds apart
-python advanced/twap.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10
+python advanced/twap_strategy.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10
 
 # Dry-run
-python advanced/twap.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10 --dry-run
+python advanced/twap_strategy.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10 --dry-run
     </div>
 
-    <h3>6. Grid Trading (<code>src/advanced/grid.py</code>)</h3>
+    <h3>6. Grid Trading (<code>src/advanced/grid_strategy.py</code>)</h3>
     <p>Automated buy-low/sell-high within a price range. Places multiple orders at different levels to capture volatility.</p>
     <div class="code-block">
 # Grid from 49000 to 51000 with 5 levels (buys lower, sells higher)
-python advanced/grid.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5
+python advanced/grid_strategy.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5
 
 # Dry-run
-python advanced/grid.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5 --dry-run
+python advanced/grid_strategy.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5 --dry-run
     </div>
 
     <h2>Test Results</h2>

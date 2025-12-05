@@ -49,10 +49,10 @@ om_Binance_bot/
 │   ├── utils/
 │   │   └── __init__.py         # Re-exports from helpers
 │   └── advanced/
-│       ├── stop_limit.py       # Stop-Limit orders
-│       ├── twap.py             # TWAP strategy
-│       ├── oco.py              # OCO orders
-│       └── grid.py             # Grid trading
+│       ├── stop_limit_order.py  # Stop-Limit orders
+│       ├── twap_strategy.py     # TWAP strategy
+│       ├── oco_strategy.py      # OCO orders
+│       └── grid_strategy.py     # Grid trading
 ├── .env                         # API credentials (not in repo)
 ├── bot.log                      # Execution logs
 └── README.md                    # This file
@@ -90,7 +90,7 @@ python limit_orders.py -s BTCUSDT -S BUY -q 0.001 -p 50000
 
 ```bash
 cd src
-python advanced/stop_limit.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900
+python advanced/stop_limit_order.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 59900
 ```
 
 **Parameters:**
@@ -101,7 +101,7 @@ python advanced/stop_limit.py -s BTCUSDT -S SELL -q 0.001 --stop 60000 --limit 5
 
 ```bash
 cd src
-python advanced/oco.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000
+python advanced/oco_strategy.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000
 ```
 
 **Parameters:**
@@ -112,7 +112,7 @@ python advanced/oco.py -s BTCUSDT -S BUY -q 0.001 --tp 51000 --sl 49000
 
 ```bash
 cd src
-python advanced/twap.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10
+python advanced/twap_strategy.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10
 ```
 
 **Parameters:**
@@ -123,7 +123,7 @@ python advanced/twap.py -s BTCUSDT -S BUY -q 0.01 --parts 5 --delay 10
 
 ```bash
 cd src
-python advanced/grid.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5
+python advanced/grid_strategy.py -s BTCUSDT -S BUY -q 0.01 --lower 49000 --upper 51000 --levels 5
 ```
 
 **Parameters:**
