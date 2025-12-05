@@ -14,7 +14,7 @@ def place_limit_order(symbol: str, side: str, quantity, price, dry_run: bool = F
 
     if dry_run:
         logger.info(f"[DRY-RUN] Would place Futures LIMIT {side_up} {quantity} {symbol} @ {price}")
-        print(f"✅ [DRY-RUN] Futures Limit order validated: {side_up} {quantity} {symbol} @ {price}")
+        print(f"[DRY-RUN] Futures Limit order validated: {side_up} {quantity} {symbol} @ {price}")
         return
 
     client = get_client()
@@ -31,16 +31,16 @@ def place_limit_order(symbol: str, side: str, quantity, price, dry_run: bool = F
         )
 
         logger.info(f"Limit order response: {order}")
-        print("✅ Futures Limit order placed (or attempted).")
+        print("[OK] Futures Limit order placed (or attempted).")
         print(order)
 
     except BinanceAPIException as e:
         logger.error(f"Binance API error (limit): {e}")
-        print("❌ Binance API error:", e)
+        print("[ERROR] Binance API error:", e)
 
     except Exception as e:
         logger.error(f"General error (limit): {e}")
-        print("❌ Error:", e)
+        print("[ERROR] Error:", e)
 
 
 def main():

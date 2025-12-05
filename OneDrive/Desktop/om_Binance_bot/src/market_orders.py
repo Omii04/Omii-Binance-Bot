@@ -15,7 +15,7 @@ def place_market_order(symbol: str, side: str, quantity, dry_run: bool = False):
 
     if dry_run:
         logger.info(f"[DRY-RUN] Would place Futures MARKET {side_up} {quantity} {symbol}")
-        print(f"✅ [DRY-RUN] Futures Market order validated: {side_up} {quantity} {symbol}")
+        print(f"[DRY-RUN] Futures Market order validated: {side_up} {quantity} {symbol}")
         return
 
     client = get_client()
@@ -30,16 +30,16 @@ def place_market_order(symbol: str, side: str, quantity, dry_run: bool = False):
         )
 
         logger.info(f"Market order response: {order}")
-        print("✅ Futures Market order placed (or attempted).")
+        print("[OK] Futures Market order placed (or attempted).")
         print(order)
 
     except BinanceAPIException as e:
         logger.error(f"Binance API error (market): {e}")
-        print("❌ Binance API error:", e)
+        print("[ERROR] Binance API error:", e)
 
     except Exception as e:
         logger.error(f"General error (market): {e}")
-        print("❌ Error:", e)
+        print("[ERROR] Error:", e)
 
 
 
